@@ -19,11 +19,11 @@ fi
 
 # Determine if spotify.monitor is already set up
 if [[ -z $(pactl list short | grep spotify.monitor) ]]; then
-  pactl load-module module-null-sink 'sink_name=spotify'
+  pactl load-module module-combine-sink 'sink_name=spotify'
 fi
 
 # Move Spotify sound output back to default at exit
-pasink=$(pactl stat | grep Sink | cut -d: -f2)
+pasink=$(pactl info | grep Sink | cut -d: -f2)
 trap 'pactl move-sink-input $spotify $pasink' EXIT
 
 # Move Spotify to its own sink so recorded output will not get corrupted
@@ -57,7 +57,7 @@ do
     echo "RECORDING"
     parec -d spotify.monitor | oggenc -b 192 -o tmp.ogg --raw - 2>/dev/null\
       &disown
-    trap 'pactl move-sink-input $spotify $pasink && killall oggenc && killall parec' EXIT
+    trap 'killall oggenc && killall parec' EXIT
 
   else
     variant=$(echo "$line"|cut -d= -f1)
